@@ -30,7 +30,7 @@ Below is an example output of the script setting up the partitions.
 > [!IMPORTANT]
 > It can take up to several hours when you run this on an existing database! 
 > 
-> It is advised for existing databases to use TMUX to run the script during initial setup, this will make sure the script continues to run when your connection might be cut off. 
+> It is advised for existing databases to use [TMUX](https://www.redhat.com/en/blog/introduction-tmux-linux) to run the script during initial setup, this will make sure the script continues to run when your connection might be cut off. 
 
 运行脚本     
 ```bash
@@ -112,7 +112,7 @@ Initial run of the script can take very long when you have a very big database. 
 > 
 > It can take up to several hours when you run this on an existing database! 
 > 
-> It is advised for existing databases to use TMUX to run the script during initial setup, this will make sure the script continues to run when your connection might be cut off. 
+> It is advised for existing databases to use [TMUX](https://www.redhat.com/en/blog/introduction-tmux-linux) to run the script during initial setup, this will make sure the script continues to run when your connection might be cut off. 
 
 当运行此脚本的时候，Zabbix库有存量数据，此时，建议清空想表的数据，然后再执行此脚本   
 ```bash
