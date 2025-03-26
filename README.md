@@ -7,9 +7,9 @@ MySQL  version 5.6  5.7 8.0
 本项目是《Zabbix企业级分布式监控系统》第2版中第3章节中的代码，如需使用，请注明出处即可，遵循Apache 2.0开源协议     
 
 # 1. configration 
-Before run this scripts,maybe you should modify it   
+Before running this script, you need to edit the connection parameters.   
 修改脚本中的账号信息，如下所示
-```
+```bash
 # MySQL connect information
 ZABBIX_USER="zabbix"
 ZABBIX_PWD="zabbix"
@@ -24,9 +24,16 @@ HISTORY_DAYS=30
 # How months you will keep trend days,default is 12  趋势数据存储保留时间
 TREND_MONTHS=12
 ```
-# 2. run it
+# 2. Run the script
+Below is an example output of the script setting up the partitions. 
+
+> [!IMPORTANT]
+> It can take up to several hours when you run this on an existing database! 
+> 
+> It is advised for existing databases to use TMUX to run the script during initial setup, this will make sure the script continues to run when your connection might be cut off. 
+
 运行脚本     
-```
+```bash
 shell# bash partitiontables_zabbix.sh 
 table history      create partitions p20180716
 table history_log  create partitions p20180716
@@ -44,9 +51,9 @@ table trends_uint  create partitions p201807
 table trends       create partitions p201808
 table trends_uint  create partitions p201808
 ```
-# 3. check partitions
+# 3. Check the partitions
 验证脚本是否执行成功  
-```
+```bash
 shell# mysql -uzabbix -pzabbix zabbix
 MariaDB [zabbix]> show create table history\G;
 *************************** 1. row ***************************
@@ -72,21 +79,43 @@ ERROR: No query specified
 MariaDB [zabbix]>
 ```
 当看到PARTITION的时候，说明分区已创建成功。  
-if you see this,everything is OK.
+When you see "PARTITION" it means the partition has been created successfully.
 
-# 4. set crontab
-the crontab remove old partitions every day    
+# 4. Set crontab
+The cronjob running the script will remove old partitions every day and create new when required.  
 每天的定时任务，是由linux的crontab去实现的，需确保Linux服务器的crond启动成功。否则会引起新分区无法自动创建的问题   
-```
-shell# crontab -e
-1 0 * * * /usr/sbin/partitiontables_zabbix.sh
+
+1. Make the script executable:
+```bash
 Shell# chmod 700 /usr/sbin/partitiontables_zabbix.sh
 ```
-# truncate table(only with delete data)
-if you database is so big,you should clean data first,then run this scripts   
+2. Open crontab: 
+```bash
+shell# crontab -e
+```
+3. Add this line to make it run right after midnight (00:01 am):
+```bash
+1 0 * * * /usr/sbin/partitiontables_zabbix.sh
+```
+
+Example of a cronjob when you also want to have a logfile sowing the output:
+```bash
+# Create new history/trend partitions and delete old at 00:01 am (do NOT mess with this as it can break Zabbix):
+1 0 * * * /opt/zabbix-scripts/partitiontables_zabbix.sh 1>/var/log/zabbix/zabbix_partitioning.log 2>&1
+```
+
+# 5. Truncate table (only if you are Ok with loosing historical data).
+Initial run of the script can take very long when you have a very big database. Running it on a new and clean Zabbix database will work a lot faster. 
+
+> [!IMPORTANT]
+> Below will delete the tables holding history data so make sute you have a backup.
+> 
+> It can take up to several hours when you run this on an existing database! 
+> 
+> It is advised for existing databases to use TMUX to run the script during initial setup, this will make sure the script continues to run when your connection might be cut off. 
 
 当运行此脚本的时候，Zabbix库有存量数据，此时，建议清空想表的数据，然后再执行此脚本   
-```
+```bash
 mysql> use zabbix; 
 mysql> truncate table history; 
 mysql> optimize table history; 
